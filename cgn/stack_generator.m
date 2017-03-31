@@ -1,4 +1,4 @@
-function [ stack,offset,SIG,NOISE,img] = stack_generator( img,conf,sig,noise,options)
+function [ stack,offset,SIG,NOISE,img] = stack_generator( img, conf, sig, noise, options)
 % stac_generator : make mock confocal data from a ground truth
 %   Distributed under the terms of the GNU Public licence GPL3
 %
@@ -84,12 +84,12 @@ end
 if isfield(options,'segmentation')
    seg_options=options.segmentation;
 else
-    seg_options=defopt.segmentation;
+   seg_options=defopt.segmentation;
 end
 
 %% Stack generation
-[ stack,offset] = generate_stacks( img,conf,sig,noise,seg_options);
-[SIG,NOISE,img]=get_img_params(stack,seg_options);
+[stack, offset] = generate_stacks( img, conf, sig, noise, seg_options);
+[SIG, NOISE, img]= get_img_params(stack, seg_options);
 
 
 % we compare the 'target' signal and noise (sig,noise) to the signal and

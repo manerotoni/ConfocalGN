@@ -99,20 +99,22 @@ img=convolve_with_psf(img,psf);
 %% Taking the pixels 
 [stack,offset,nn]=stack_from_img(img,pix);
 
+
 %% Generating pixel noise
-px_noise=pixel_noise(noise,nn);
+px_noise = pixel_noise(noise,nn);
 
 %% Estimating signal & noise levels and calibrating noise
-[ Ssig,Snoise] = get_img_params(stack,options);
-f=Ssig(1);
-b=Snoise(1);
-% Desired signal to noise 
-s=sig(1)/noise(1);
-% Linear algebra on stack to reach desired signal and noise level
-B=(f-s*b)/(s-1);
-A=1/(b+B);
-stack=A*(stack+B);
-%% We multiply the stack by the noise
-stack(:)=stack(:).*px_noise(:);
+% [Ssig,Snoise] = get_img_params(stack,options);
+% f=Ssig(1);
+% b=Snoise(1);
+% % Desired signal to noise 
+% s=sig(1)/noise(1);
+% % Linear algebra on stack to reach desired signal and noise level
+% B=(f-s*b)/(s-1); % this is the background
+% A=1/(b+B);
+% stack=A*(stack+B);
+% %% We multiply the stack by the noise
+% stack(:)=stack(:).*px_noise(:);
+
 end
 

@@ -20,28 +20,37 @@ conf.pix=[8 8 32];
 
 % Property of the microscope PSF
 % Standard deviation of the PSF in the 3 dimensions provided in units of ground truth pixel size
-conf.psf=[13 13 22];
-
+% assume ground truth dimesion is 5 nm. 
+conf.psf=[13 13 13*5];
+if exist(truth_file, 'file')<2
+    truth = make_ground_truth(truth_file);
+    
+    disp('Generated ground truth')
+else
+    %%
+    truth_in = tiffread(truth_file);
+    truth = get_stack(truth_in);
+    truth = truth/max(truth(:));
+end
 
 %% Here we present two ways of using ConfocalGN
-if 1
+if 0
     % Reading Noise and Signal parameters from image
     sample='sample_image.tiff';
     %% Making a ground truth file if there is none
-    if exist(truth_file, 'file')<2
-        truth=make_ground_truth(truth_file);
-        disp('Generated ground truth')
-    end
     %% Generating the stack from the image
     % Includes pixel noise
-    [stacks,offset,achieved_sig,achieved_noise,im,mean_sig,noise]=confocal_generator(truth,conf,sample);
+    [stacks,offset,achieved_sig,achieved_noise,im,mean_sig,noise] = confocal_generator(truth,conf,sample);
 else
     % Using noise and signal values
     % pixel noise from camera
-    noise=[556 1.0371e+04 1.0926e+06]';
+    noise=[556 1.0371e+04 1.0926e+06]'*0.01;
+    noise=[556 0 0]'*0.01;
+    % no noise
+    %noise=[0 1 1]';
     % Estimated mean pix value in signal
     mean_sig=1.0022e+03;
-    [stacks,offset,achieved_sig,achieved_noise,im]=stack_generator(truth,conf,noise,mean_sig);
+    [stacks,offset,achieved_sig,achieved_noise,im] = stack_generator(truth, conf,  mean_sig, noise);
 end
 
 %% Save simulated image
