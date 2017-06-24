@@ -1,4 +1,4 @@
-function opt = cgn_options_load(verbose)
+function opt = gtm_options_load(verbose)
 % Load options present in current working directory,
 % or load default options
 %
@@ -9,32 +9,43 @@ function opt = cgn_options_load(verbose)
 % https://github.com/SergeDmi/ConfocalGN
 % Licenced under GNU General Public Licence 3
 
+
 if nargin < 1
-    verbose = 0;
+    verbose = [];
 end
 
 
 %% Load options
 
-f = dir('cgn_options.m');
+f = 'gtm_options.m';
 
-if ~ isempty(f)
+if exist(f,'file')==2
     
-    if verbose
-        fprintf(2,'Loading local options from %s\n', f.name);
+    opt = gtm_options;
+    if isfield(opt,'verbose') && isempty(verbose)
+        verbose=opt.verbose;
     end
         
-    opt = cgn_options;
+    if verbose
+        fprintf(2,'Loading local options from %s\n', f);
+    end
+        
+    
     
 else
     
+    opt = gtm_options_default;
+    
+    if isfield(opt,'verbose') && isempty(verbose)
+        verbose=opt.verbose;
+    end
+        
     if verbose
         fprintf(2,'Loading default options\n');
     end
     
-    opt = cgn_options_default;
+    
 
 end
-
 
 end

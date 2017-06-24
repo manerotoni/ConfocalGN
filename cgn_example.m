@@ -1,72 +1,87 @@
 % Example file,
-% to use ConfocalGN to simulate confocal imaging
-% Serge Dmitrieff, Nédélec Lab, EMBL 2015-2016
-% http://biophysics.fr
+%% Copyright
+% This file is part of ConfocalGN, a generator of confocal microscopy images
+% Serge Dmitrieff, Nédélec Lab, EMBL 2015-2017
+% https://github.com/SergeDmi/ConfocalGN
+% Licenced under GNU General Public Licence 3
+
+
+%% Example options
+do_save=1;
+do_display=1;
+do_plot=1;
 
 %% Ground truth
-
-% Ground truth can be an image file or a stack, in high resolution
-
-truth_file='ground_truth.tiff';
-save=0;
-display=1;
-plot=1;
+% - Ground truth can be an image file or a stack, in high resolution
+%       associated to the size of the high resolution voxel
+%      E.G.
+%              truth.img='ground_truth.tiff';
+%              truth.pix=[11.5 11.5 11.5];
+% - Or the ground truth can be fluorophore coordinates
+truth.source='ground_truth.txt';
 
 %% Parameters for ConfocalGN
-
-% pix : number of pixels of the ground truth in a confocal voxel
-% ground truth is high res compared to confocal
-conf.pix=[8 8 32];
-
-% Property of the microscope PSF
-% Standard deviation of the PSF in the 3 dimensions provided in units of ground truth pixel size
-% assume ground truth dimesion is 5 nm. 
-conf.psf=[13 13 13*5];
-if exist(truth_file, 'file')<2
-    truth = make_ground_truth(truth_file);
-    
-    disp('Generated ground truth')
-else
-    %%
-    truth_in = tiffread(truth_file);
-    truth = get_stack(truth_in);
-    truth = truth/max(truth(:));
-end
+% conf.pix : size of a simulated voxel in physical units (e.g. nanometer)
+% ground truth should be of high resolution
+% i.e; conf.pix(:) >> truth.pix(:)
+conf.pix=[200 200 800];
+% conf.psf : 2-way point spread funciton
+% Can be either :
+% - Standard deviation of the PSF in the 3 dimensions (in physical units)
+% - an image to be convolved with ground truth truth.img
+conf.psf=[250 250 500];
+%conf.psf='gauss_psf.tiff';
 
 %% Here we present two ways of using ConfocalGN
 if 0
     % Reading Noise and Signal parameters from image
     sample='sample_image.tiff';
-    %% Making a ground truth file if there is none
     %% Generating the stack from the image
-    % Includes pixel noise
-    [stacks,offset,achieved_sig,achieved_noise,im,mean_sig,noise] = confocal_generator(truth,conf,sample);
+    [res,truth,sample]=confocal_generator(truth,conf,sample);
 else
-    % Using noise and signal values
-    % pixel noise from camera
-    noise=[556 1.0371e+04 1.0926e+06]'*0.01;
-    noise=[556 0 0]'*0.01;
-    % no noise
-    %noise=[0 1 1]';
-    % Estimated mean pix value in signal
-    mean_sig=1.0022e+03;
-    [stacks,offset,achieved_sig,achieved_noise,im] = stack_generator(truth, conf,  mean_sig, noise);
+    % Using user-defined noise and signal values
+    salmple.noise=[556 1.0371e+04 1.0926e+06]';
+    sample.sig=1.0022e+03;
+    %% Generating the stack from the image
+    [res,truth,sample]=confocal_generator(truth,conf,sample);
 end
+%% Output : 
+% res is the result containing : 
+%   res.stack : the simulated stack
+%   res.sig : mean value of simulated signal voxels
+%   res.noise : moments of the simulated background voxels values
+%   res.img : the image obtained from segmenting res.stack
+%   res.offset : spatial offset between the stack and the ground truth
+% truth is the structure containing
+%   truth.points : fluorophore coordinates of the ground truth
+%   truth.img : ground truth image
+%   truth.pix : size of a ground truth pixel in physical units
+% sample is the sample information, containing :
+%   sample.sig : mean value of the sample signal voxels
+%   sample.noise : moments of the sample background voxels values
+%   (sample.img) : sample image
+
+
+%% Plotting and saving
+stacks=res.stack;
 
 %% Save simulated image
-if save
+if do_save
     output='simulated_stack.tiff';
-    saveastiff(stacks,output);
+    opt.format='single';
+    tiff_saver(stacks,output,opt);
 end
 
 %% Display simulated image:
-if display
+if do_display
     for i = 1:size(stacks, 3)
         show(stacks(:,:,i));
     end
 end
 
 %% Display Image segmentation & plotting to compare simulated data to original
-if plot
-    plot_simul_results(truth,im,conf,offset)
+if do_plot
+    if isfield(truth,'points')
+        plot_simul_results(truth,res,conf)
+    end
 end

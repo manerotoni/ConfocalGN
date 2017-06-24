@@ -1,24 +1,34 @@
-function [ sig,noise,img,stack,mask] = get_img_params(image,options)
+function [ sig,noise,img,stack,mask] = get_img_params(sample_image,options)
 % Finds mean pixel value of signal, and background distribution in image
-%   For this we segment the image (gaussian filter+thresholding)
+%   For this we segment the image using provide_image_mask
 %   image can be a filename (then loaded with tiffread)
-%   or a stack
+%   or a matrix of voxel values
 %
 % Input :
-% image is an image or image file, filt is the segmenting parameters
-% ix is the frames to be kept from the image 
+%    image is an image or image file, filt is the segmenting parameters
+%    ix is the frames to be kept from the image 
 %
 % Output :
-% mean_sig is the mean value of 'signal' pixels
-% noise are the moments of the 'background' pixels
-% signal vs background are determined by the segment_image function
-% please replace by your own for optimal usage
-% stack is the analyzed image (raw data)
-% mask are the background pixels 
+%   sig is the mean value of 'signal' pixels
+%   noise are the moments of the 'background' pixels
+%   img is the thresholded image
+%   stack is the analyzed image (raw data)
+%   mask are the signal pixels 
 %
-% Serge Dmitrieff, Nélec Lab, EMBL 2016
-% www.biophysics.fr
+% Warning :
+%	signal vs background are determined by provide_image_mask
+%   by default, it relies on a simple image segmentation procedure
+%   please replace by your own procedure for optimal usage
+%   
+%% Copyright
+% This file is part of ConfocalGN, a generator of confocal microscopy images
+% Serge Dmitrieff, Nédélec Lab, EMBL 2015-2017
+% https://github.com/SergeDmi/ConfocalGN
+% Licenced under GNU General Public Licence 3
 
+
+%% Input verification and processing
+% Checking options
 defopt=cgn_options_load();
 if nargin<2
     options=defopt;
@@ -29,10 +39,20 @@ end
 if isfield(options,'segmentation')
     options=options.segmentation;
 end
-if isfield(options,'ix')
-    ix=options.ix;
+
+defopt=defopt.segmentation;
+options=complete_options(options,defopt);
+ix=options.ix;
+
+% Checking image and mask
+mask=[];
+if isfield(sample_image,'img')
+    image=sample_image.img;
+    if isfield(sample_image,'mask')
+        mask=sample_image.mask;
+    end
 else
-    ix=defopt.segmentation.ix;
+    image=sample_image;
 end
 
 if ischar(image)
@@ -58,22 +78,20 @@ else
     end
 end
 
-%% Segmenting image
-%-------------------------------------------------------------------------
-% USER : Replace segment_image by your own segmenting procedure if need be
-%-------------------------------------------------------------------------
-% mask are the pixels to be filtered OUT, i.e. noise
-% img is the resulting image
-[img,mask]=segment_image(stack,options);
+%% Image segmentation
+if isempty(mask)
+    % mask are the signal pixels
+    mask=provide_image_mask(stack,options);
+end
+img=stack.*mask;
 
 %% Computing signal & noise properties
 % Background value in original image
-bkg=stack(mask);
+bkg=stack(~mask);
 % Signal value in original image
-frt=stack(~mask);
+frt=stack(mask);
 % Observables
 noise=moments(bkg);
 sig=moments(frt);
 
 end
-

@@ -1,16 +1,21 @@
-function [ img,mask] = segment_image(image,options)
+function [ img,sig_mask,bg_mask] = segment_image(image,options)
 % Minimal image segmentation function
 %   Gaussian blurring + thresholding
 %   Should be replaced by your own !
 %
 %   img is the thresholded image
-%   mask is the mask to apply to the image to obtain the background
+%   sig_mask is the mask to apply to the image to obtain the signal voxels
+%   bg_mask is the mask to apply to the image to obtain the background voxels
 %
 % options or options.segmentation should contain filt
 % filt is a 3x1 vector for the Gaussian blurring to be applied
 %
-% Serge Dmitrieff, Nédélec Lab, EMBL 2016
-% www.biophysics.fr
+%% Copyright
+% This file is part of ConfocalGN, a generator of confocal microscopy images
+% Serge Dmitrieff, Nédélec Lab, EMBL 2015-2017
+% https://github.com/SergeDmi/ConfocalGN
+% Licenced under GNU General Public Licence 3
+
 
 defopt=cgn_options_load();
 if nargin<2
@@ -19,31 +24,19 @@ end
 if isfield(options,'segmentation')
     options=options.segmentation;
 end
-if isfield(options,'filt')
-    filt=options.filt;
-else
-    filt=defopt.segmentation.filt;
-end
-if isfield(options,'ix')
-    ix=options.ix;
-else
-    ix=defopt.segmentation.ix;
-end
+defopt=defopt.segmentation;
+options=complete_options(options,defopt);
+
+filt=options.filt;
+ix=options.ix;
 
 if ischar(image)
     if ~isempty(ix)
-        imgs=tiffread(image,ix);
+        stack=get_stack(tiffread(image,ix));
     else
-        imgs=tiffread(image);
+        stack=get_stack(tiffread(image));
     end
-    n=length(imgs);
-    s=size(imgs(1).data);
-    s(3)=n;
-
-    stack=zeros(s);
-    for i=1:n
-        stack(:,:,i)=imgs(i).data;
-    end
+   
 else
     if ~isempty(image)
         stack=image;
@@ -55,8 +48,8 @@ end
 % Blurring
 img=gauss3filter(stack,filt);
 % Thresholding
-[img,mask]=threshold(img);
-
+[img,bg_mask]=threshold(img);
+sig_mask=~bg_mask;
 
 end
 

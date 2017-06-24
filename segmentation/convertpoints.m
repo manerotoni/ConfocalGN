@@ -1,10 +1,20 @@
 function [ Pts,W ] = convertpoints( img , pixsizes,offset)
-% Convert a 1D/2D/3D stack into an array of points coordinates Pts with
-% weights W
+% Convert a 1D/2D/3D stack into an array of points and weights
+%   img : stack
 %   Pixsizes corresponds to the pixel size along each dimension
 %   Offset is the an offset 
 %  
-% Serge Dmitrieff, EMBL, 2015
+%   Pts: coordinates
+%   W : weights
+%
+%% Copyright
+% This file is part of ConfocalGN, a generator of confocal microscopy images
+% Serge Dmitrieff, Nédélec Lab, EMBL 2015-2017
+% https://github.com/SergeDmi/ConfocalGN
+% Licenced under GNU General Public Licence 3
+
+
+%% Preparing offset and pixel sizes
 if nargin<3
     offset=[0 0 0];
     if nargin<2
@@ -14,8 +24,9 @@ end
 s=size(img);
 l=length(pixsizes);
 
+%% Preparing offset and pixel sizes
 if length(s)==l && length(s)<4
-   	ixes=logical(~isnan(img(:)))';
+   	ixes=logical(~isnan(img(:)).*(img(:)>0))';
 	if l==1
         % 1D
 		X=pixsizes(1)*(1:s(1));

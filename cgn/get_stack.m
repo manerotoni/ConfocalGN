@@ -9,8 +9,12 @@ function [ stack ] = get_stack( imgs )
 % [b] One object, of which data is a cell array, each cell containing
 % a 2D array which is a slice of the stack
 %
-% Serge Dmitrieff, Nédélec lab, EMBL, 2016
-% www.biophysics.fr
+%% Copyright
+% This file is part of ConfocalGN, a generator of confocal microscopy images
+% Serge Dmitrieff, Nédélec Lab, EMBL 2015-2017
+% https://github.com/SergeDmi/ConfocalGN
+% Licenced under GNU General Public Licence 3
+
 
 n=length(imgs);
 if n>1
@@ -29,7 +33,7 @@ if n>1
         s(3)=n;
         stack=zeros(s);
         for i=1:n
-            if length(imgs(i).data>1)
+            if length(imgs(i).data)>1
                 error('Unsupported tiff format : stack of stacks')
             end
             stack(:,:,i)=imgs(i).data;

@@ -79,7 +79,7 @@ if ~isfield(options, 'message'),   options.message   = true; end
 if ~isfield(options, 'append'),    options.append    = false; end
 if ~isfield(options, 'compress'),  options.compress  = 'no';  end
 if ~isfield(options, 'color'),     options.color     = false; end
-if ~isfield(options, 'overwrite'), options.overwrite = false; end
+if ~isfield(options, 'overwrite'), options.overwrite = true; end
 if  isfield(options, 'big') == 0,  options.big       = false; end
 
 if isempty(data), errcode = 1; assert(false); end
@@ -268,9 +268,10 @@ end
 tfile.close();
 if exist('path_parent', 'var'), cd(path_parent); end
 
-tElapsed = toc(tStart);
 if options.message
-    display(sprintf('The file was saved successfully. Elapsed time : %.3f s.', tElapsed));
+    tElapsed = toc(tStart);
+    display(sprintf('The file `%s` was saved successfully.', path));
+    %display(sprintf('The file was saved successfully. Elapsed time : %.3f s.', path, tElapsed));
 end
 
 catch exception
